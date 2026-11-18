@@ -1,0 +1,6 @@
+{
+  "name": "IdeaSense Explorer · IA y Ciberseguridad",
+  "description": "Plataforma educativa de telemetría BLE, detección de anomalías con Edge AI (k-NN), simulación de ataques físicos y copiloto de ciberseguridad con Gemini para IdeaBoard e IdeaSense Explorer (Universidad CENFOTEC).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
