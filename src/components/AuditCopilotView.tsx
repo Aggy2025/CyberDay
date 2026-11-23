@@ -7,6 +7,7 @@ import {
   Square,
   Trash2,
 } from 'lucide-react';
+import { parseApiJsonResponse } from '../lib/apiUtils';
 import { computeAccelMagnitude, exportAuditToCsv } from '../lib/cyberEngine';
 import type {
   AuditRow,
@@ -131,11 +132,14 @@ export function AuditCopilotView({
           userQuestion: question.trim() || undefined,
         }),
       });
-      const json = await resp.json();
-      if (!resp.ok) {
-        setAnalysisError(json.error || 'No se pudo completar el análisis.');
+      const parsed = await parseApiJsonResponse<{
+        analysis?: GeminiIncidentAnalysis;
+        error?: string;
+      }>(resp, 'No se pudo completar el análisis.');
+      if (!parsed.ok || !parsed.data?.analysis) {
+        setAnalysisError(parsed.error || 'No se pudo completar el análisis.');
       } else {
-        setAnalysis(json.analysis);
+        setAnalysis(parsed.data.analysis);
       }
     } catch (err) {
       setAnalysisError(

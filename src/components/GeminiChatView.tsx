@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { AlertCircle, Send, Sparkles, Trash2 } from 'lucide-react';
+import { parseApiJsonResponse } from '../lib/apiUtils';
 import type {
   ChatMessage,
   ChatRoleId,
@@ -102,17 +103,23 @@ export function GeminiChatView({
             : undefined,
         }),
       });
-      const data = await resp.json();
-      if (!resp.ok) {
-        setErrorMsg(data.error || 'No se pudo obtener respuesta del chat.');
+      const parsed = await parseApiJsonResponse<{
+        reply?: string;
+        model?: FreeGeminiModel;
+        error?: string;
+      }>(resp, 'No se pudo obtener respuesta del chat.');
+      if (!parsed.ok || !parsed.data?.reply) {
+        setErrorMsg(parsed.error || 'No se pudo obtener respuesta del chat.');
       } else {
+        const replyText = parsed.data.reply;
+        const replyModel = parsed.data.model;
         setMessages((prev) => [
           ...prev,
           {
             id: `m-${Date.now()}`,
             role: 'model',
-            text: data.reply,
-            model: data.model,
+            text: replyText,
+            model: replyModel,
             ts: Date.now(),
           },
         ]);
