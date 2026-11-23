@@ -3,6 +3,7 @@ import {
   Box,
   BrainCircuit,
   Cpu,
+  Eye,
   FileSpreadsheet,
   Gamepad2,
   MessageSquare,
@@ -45,9 +46,15 @@ const NAV_ITEMS: Array<{
   },
   {
     id: 'game',
-    label: 'Firewall 2D',
-    sublabel: 'Gamepad con botones A/B',
+    label: 'Juegos CyberLab',
+    sublabel: '3 minijuegos con hardware',
     icon: Gamepad2,
+  },
+  {
+    id: 'optical',
+    label: 'Guía de Sensores',
+    sublabel: 'Luz, IMU, SHT30 y Botones',
+    icon: Eye,
   },
   {
     id: 'audit',

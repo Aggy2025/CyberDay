@@ -10,6 +10,7 @@ import type {
   SecurityClassId,
   SecurityThresholds,
   TelemetryPacket,
+  ThreatTrendPoint,
 } from './types';
 
 export const DEFAULT_THRESHOLDS: SecurityThresholds = {
@@ -202,7 +203,7 @@ export function evaluateSecurityAlerts(
       ts: nowTs,
       severity: 'warning',
       category: 'optical',
-      title: 'Obstrucción del sensor óptico',
+      title: 'Obstrucción del sensor de luz',
       detail: `Sensor LTR-303 cayó a ${packet.l} cuentas (mínimo ${thresholds.minLightCounts}).`,
       vectorTag: 'Sensor Spoofing / Blinding',
     });
@@ -616,4 +617,82 @@ export function buildAlertHeatmapMatrix(
     maxCellValue,
     totalAlerts: alerts.length,
   };
+}
+
+export function computeThreatTrendPoint(
+  prediction: KnnPrediction,
+  ts: number = Date.now(),
+): ThreatTrendPoint {
+  const baseScore =
+    prediction.predictedClass === 'normal'
+      ? Math.min(25, prediction.zScoreMax * 8)
+      : Math.max(45, Math.min(100, prediction.confidence * 0.65 + prediction.zScoreMax * 3.5));
+
+  const threatScore = Math.round(Math.max(0, Math.min(100, baseScore)));
+  const d = new Date(ts);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const timeLabel = `${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+
+  return {
+    ts,
+    timeLabel,
+    threatScore,
+    zScore: Number(prediction.zScoreMax.toFixed(2)),
+    confidence: prediction.confidence,
+    predictedLabel: SECURITY_CLASS_META[prediction.predictedClass].name,
+  };
+}
+
+export function exportAlertsToCsv(alerts: SecurityAlert[]): string {
+  const headers = [
+    'id',
+    'timestamp_iso',
+    'timestamp_ms',
+    'severidad',
+    'categoria',
+    'titulo',
+    'detalle',
+    'vector_ataque',
+  ];
+
+  const lines = [headers.join(',')];
+  for (const al of alerts) {
+    lines.push(
+      [
+        al.id,
+        new Date(al.ts).toISOString(),
+        al.ts,
+        al.severity,
+        al.category,
+        al.title,
+        al.detail,
+        al.vectorTag,
+      ]
+        .map(escapeCsvCell)
+        .join(','),
+    );
+  }
+  return lines.join('\n');
+}
+
+export function exportAlertsToJson(
+  alerts: SecurityAlert[],
+  exportedAtIso: string = new Date().toISOString(),
+): string {
+  const payload = {
+    plataforma: 'IdeaSense Explorer · IA y Ciberseguridad (Universidad CENFOTEC)',
+    exportado_en: exportedAtIso,
+    total_alertas: alerts.length,
+    alertas: alerts.map((al) => ({
+      id: al.id,
+      timestamp_iso: new Date(al.ts).toISOString(),
+      timestamp_ms: al.ts,
+      severidad: al.severity,
+      categoria: al.category,
+      titulo: al.title,
+      detalle: al.detail,
+      vector_ataque: al.vectorTag,
+    })),
+  };
+  return JSON.stringify(payload, null, 2);
 }

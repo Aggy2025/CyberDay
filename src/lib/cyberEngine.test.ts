@@ -3,9 +3,12 @@ import assert from 'node:assert/strict';
 import {
   buildAlertHeatmapMatrix,
   classifyTelemetryWindow,
+  computeThreatTrendPoint,
   createBaselineCyberDataset,
   DEFAULT_THRESHOLDS,
   evaluateSecurityAlerts,
+  exportAlertsToCsv,
+  exportAlertsToJson,
   exportAuditToCsv,
   extractFeatureVector,
   generateCircuitPythonClassifier,
@@ -184,4 +187,62 @@ test('buildAlertHeatmapMatrix aggregates alerts by time bucket and grouping mode
   assert.ok(opticalRow);
   assert.equal(opticalRow.label, 'Gabinete · Sensor LTR-303');
   assert.equal(opticalRow.cells[5], 1);
+});
+
+test('computeThreatTrendPoint maps normal vs attack AI predictions into 0-100 threat score', () => {
+  const normalPt = computeThreatTrendPoint(
+    {
+      predictedClass: 'normal',
+      confidence: 100,
+      minDistance: 0.05,
+      isAnomaly: false,
+      zScoreMax: 0.4,
+      neighborsCount: 3,
+    },
+    1760000000000,
+  );
+  assert.ok(normalPt.threatScore <= 25);
+  assert.equal(normalPt.predictedLabel, 'Operación Normal');
+
+  const attackPt = computeThreatTrendPoint(
+    {
+      predictedClass: 'tampering',
+      confidence: 98,
+      minDistance: 0.04,
+      isAnomaly: true,
+      zScoreMax: 12.5,
+      neighborsCount: 3,
+    },
+    1760000005000,
+  );
+  assert.ok(attackPt.threatScore >= 85 && attackPt.threatScore <= 100);
+  assert.equal(attackPt.predictedLabel, 'Sabotaje Físico (Tampering)');
+});
+
+test('exportAlertsToCsv and exportAlertsToJson serialize SOC alerts with proper escaping', () => {
+  const sampleAlerts = [
+    {
+      id: 'al-1',
+      ts: 1700000000000,
+      severity: 'critical' as const,
+      category: 'tampering' as const,
+      title: 'Manipulación, "física" detectada',
+      detail: 'Δ|a|=0.65 g, |ω|=92.0 dps',
+      vectorTag: 'Physical Tampering · T1200',
+    },
+  ];
+
+  const csv = exportAlertsToCsv(sampleAlerts);
+  const lines = csv.split('\n');
+  assert.equal(lines.length, 2);
+  assert.ok(lines[0].includes('vector_ataque'));
+  assert.ok(lines[1].includes('"Manipulación, ""física"" detectada"'));
+  assert.ok(lines[1].includes('2023-11-14T22:13:20.000Z'));
+
+  const jsonStr = exportAlertsToJson(sampleAlerts, '2026-11-20T21:15:00.000Z');
+  const parsed = JSON.parse(jsonStr);
+  assert.equal(parsed.total_alertas, 1);
+  assert.equal(parsed.exportado_en, '2026-11-20T21:15:00.000Z');
+  assert.equal(parsed.alertas[0].categoria, 'tampering');
+  assert.equal(parsed.alertas[0].vector_ataque, 'Physical Tampering · T1200');
 });

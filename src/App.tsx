@@ -2,16 +2,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AiLabView } from './components/AiLabView';
 import { AuditCopilotView } from './components/AuditCopilotView';
 import { Board3DSceneView } from './components/Board3DSceneView';
+import { CyberGamesHubView } from './components/CyberGamesHubView';
 import { DataTransparencyBanner } from './components/DataTransparencyBanner';
-import { FirewallGameView } from './components/FirewallGameView';
 import { FirmwareGuideView } from './components/FirmwareGuideView';
 import { GeminiChatView } from './components/GeminiChatView';
+import { SensorsGuideView } from './components/SensorsGuideView';
 import { SidebarNav } from './components/SidebarNav';
 import { SocMonitorView } from './components/SocMonitorView';
 import { TopHeader } from './components/TopHeader';
 import { IdeaSenseBleClient } from './lib/bleService';
 import {
   classifyTelemetryWindow,
+  computeThreatTrendPoint,
   createBaselineCyberDataset,
   DEFAULT_THRESHOLDS,
   evaluateSecurityAlerts,
@@ -27,6 +29,7 @@ import type {
   SecurityAlert,
   SecurityThresholds,
   TelemetryPacket,
+  ThreatTrendPoint,
 } from './lib/types';
 
 const STORAGE_DATASET_KEY = 'ideasense_cyber_knn_dataset_v1';
@@ -60,6 +63,7 @@ export default function App() {
 
   const [latestPacket, setLatestPacket] = useState<TelemetryPacket>(INITIAL_PACKET);
   const [history, setHistory] = useState<TelemetryPacket[]>([]);
+  const [threatHistory, setThreatHistory] = useState<ThreatTrendPoint[]>([]);
   const [alerts, setAlerts] = useState<SecurityAlert[]>([]);
   const [matrixPixels, setMatrixPixels] = useState<number[]>(
     CYBER_MATRIX_PRESETS[0].pixels,
@@ -96,6 +100,8 @@ export default function App() {
 
   const tickRef = useRef(0);
   const lastAlertTsByCatRef = useRef<Record<string, number>>({});
+  const lastTrendTsRef = useRef(0);
+  const lastPredictedClassRef = useRef<string | null>(null);
   const buttonTransitionsRef = useRef<number[]>([]);
   const prevBtnStateRef = useRef<{ ba: number; bb: number }>({ ba: 0, bb: 0 });
   const thresholdsRef = useRef(thresholds);
@@ -231,6 +237,22 @@ export default function App() {
     return classifyTelemetryWindow(win, dataset, kNeighbors);
   }, [history, dataset, kNeighbors]);
 
+  // Sample AI threat score once per second (or immediately when predicted class transitions)
+  useEffect(() => {
+    if (!prediction) return;
+    const now = Date.now();
+    const classChanged = lastPredictedClassRef.current !== prediction.predictedClass;
+    if (!classChanged && now - lastTrendTsRef.current < 1000) return;
+
+    lastTrendTsRef.current = now;
+    lastPredictedClassRef.current = prediction.predictedClass;
+    const pt = computeThreatTrendPoint(prediction, now);
+    setThreatHistory((prev) => {
+      const next = [...prev, pt];
+      return next.length > 45 ? next.slice(next.length - 45) : next;
+    });
+  }, [prediction]);
+
   const dataOrigin = resolveDataOrigin(
     connectionMode,
     history.length > 0 ? latestPacket : null,
@@ -281,6 +303,7 @@ export default function App() {
               onToggleMatrixPixel={handleToggleMatrixPixel}
               onApplyMatrixPreset={syncMatrix}
               prediction={prediction}
+              threatHistory={threatHistory}
               bleConnected={connectionMode === 'ble'}
             />
           )}
@@ -311,9 +334,17 @@ export default function App() {
           )}
 
           {activeTab === 'game' && (
-            <FirewallGameView
+            <CyberGamesHubView
               latestPacket={latestPacket}
               onSyncMatrix={syncMatrix}
+            />
+          )}
+
+          {activeTab === 'optical' && (
+            <SensorsGuideView
+              latestPacket={latestPacket}
+              thresholds={thresholds}
+              telemetryActive={connectionMode !== 'disconnected'}
             />
           )}
 

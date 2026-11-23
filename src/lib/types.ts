@@ -166,11 +166,21 @@ export interface ChatMessage {
   ts: number;
 }
 
+export interface ThreatTrendPoint {
+  ts: number;
+  timeLabel: string;
+  threatScore: number; // 0-100 derived from AI prediction & Z-score
+  zScore: number;
+  confidence: number;
+  predictedLabel: string;
+}
+
 export type ActiveTab =
   | 'soc'
   | 'twin3d'
   | 'ailab'
   | 'game'
+  | 'optical'
   | 'audit'
   | 'chat'
   | 'firmware';
