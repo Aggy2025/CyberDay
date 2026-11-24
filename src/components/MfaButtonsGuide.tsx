@@ -69,10 +69,10 @@ export function MfaButtonsGuide({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0 flex-1">
               <h2 className="font-display text-base font-semibold text-slate-900 dark:text-slate-100">
-                Diagrama 1. Entradas Digitales Pull-Up y Detección de Flancos (A y B/C)
+                Diagrama 1. Principio Pull-Up y Keyscan HT16K33 (Botones A, B y C)
               </h2>
               <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                Simula pulsaciones físicas para ver la conmutación lógica GPIO y la ventana deslizante de fuerza bruta.
+                Simula pulsaciones físicas para ver cómo el controlador HT16K33 (0x70) y el ESP32 detectan flancos y ráfagas de fuerza bruta.
               </p>
             </div>
 
@@ -157,13 +157,13 @@ export function MfaButtonsGuide({
             </button>
           </div>
 
-          {/* Interactive SVG Pull-Up GPIO Schematic */}
+          {/* Interactive SVG Pull-Up & Keyscan Schematic */}
           <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-slate-950 p-3 dark:border-slate-800">
             <svg
               viewBox="0 0 600 205"
               className="h-auto w-full"
               role="img"
-              aria-label="Diagrama de circuito Pull-Up para botones físicos A y B en microcontrolador ESP32"
+              aria-label="Diagrama de circuito Pull-Up y lectura por HT16K33 para botones físicos A, B y C hacia ESP32"
             >
               {/* Vcc */}
               <line x1="90" y1="26" x2="150" y2="26" stroke="#38bdf8" strokeWidth="2" />
@@ -182,7 +182,7 @@ export function MfaButtonsGuide({
                 10 kΩ
               </text>
 
-              {/* Node to GPIO */}
+              {/* Node to HT16K33 / ESP32 */}
               <line x1="120" y1="80" x2="120" y2="124" stroke="#94a3b8" strokeWidth="2" />
               <circle cx="120" cy="102" r="4.5" fill="#38bdf8" />
               <line x1="120" y1="102" x2="302" y2="102" stroke="#38bdf8" strokeWidth="2" strokeDasharray="4 3" />
@@ -204,8 +204,8 @@ export function MfaButtonsGuide({
                 stroke={isSwitchClosed ? '#38bdf8' : '#fbbf24'}
                 strokeWidth="2.4"
               />
-              <text x="152" y="145" fill="#cbd5e1" fontSize="10" fontFamily="DM Sans, sans-serif">
-                Switch A / B
+              <text x="148" y="145" fill="#cbd5e1" fontSize="10" fontFamily="DM Sans, sans-serif">
+                Switch A / B / C
               </text>
 
               {/* GND */}
@@ -215,8 +215,8 @@ export function MfaButtonsGuide({
 
               {/* MCU edge counter box */}
               <rect x="312" y="34" width="272" height="142" rx="10" fill="#0f172a" stroke={statusVisual.strokeHex} strokeWidth="1.8" />
-              <text x="448" y="60" textAnchor="middle" fill="#f8fafc" fontSize="12" fontFamily="Plus Jakarta Sans, sans-serif" fontWeight="700">
-                Detector de Flancos ESP32 (25 Hz)
+              <text x="448" y="60" textAnchor="middle" fill="#f8fafc" fontSize="11.5" fontFamily="Plus Jakarta Sans, sans-serif" fontWeight="700">
+                HT16K33 (0x70) → ESP32 (25 Hz)
               </text>
               <text x="448" y="80" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="DM Sans, sans-serif">
                 Ventana móvil de 3 s · Umbral ≥ {metrics.maxBurst} pulsaciones
@@ -263,12 +263,12 @@ export function MfaButtonsGuide({
           <div className="flex items-center gap-2">
             <KeyRound className="h-4 w-4 text-blue-600 dark:text-blue-400" aria-hidden="true" />
             <h2 className="font-display text-base font-semibold text-slate-900 dark:text-slate-100">
-              ¿Cómo funcionan los Botones Físicos como sensor MFA?
+              ¿Cómo funcionan los Botones A, B y C como sensor MFA?
             </h2>
           </div>
           <div className="mt-3 space-y-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
             <p>
-              La IdeaSense Explorer incorpora pulsadores táctiles conectados a pines digitales GPIO del ESP32 con resistencia <strong>Pull-Up</strong>: en reposo leen nivel alto y al presionarse cierran circuito a tierra (<span className="font-mono">ba=1</span> o <span className="font-mono">bb=1</span> en el JSON).
+              La IdeaSense Explorer integra tres pulsadores físicos (<strong className="text-slate-900 dark:text-slate-100">A, B y C</strong>) escaneados por el controlador <span className="font-mono">HT16K33</span> (<span className="font-mono">0x70</span>) sobre el bus I2C (accesibles en CircuitPython mediante <span className="font-mono">idea.held</span>). Para mantener un paquete BLE compacto, <span className="font-mono">code.py</span> envía el botón <strong>A</strong> en <span className="font-mono">ba</span> y agrupa <strong>B o C</strong> en <span className="font-mono">bb</span>.
             </p>
             <p>
               En ciberseguridad física, estos botones verifican la <strong>presencia humana local</strong> (autenticación de segundo factor en hardware) y permiten detectar intentos de fuerza bruta cuando alguien presiona repetidamente buscando desbloquear el nodo.

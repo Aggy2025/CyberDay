@@ -18,7 +18,7 @@ const TAB_TITLES: Record<ActiveTab, string> = {
   twin3d: 'Gemelo Digital 3D · IdeaBoard',
   ailab: 'Laboratorio de Edge AI (k-NN)',
   game: 'Juegos de Ciberseguridad (Hardware BLE)',
-  optical: 'Guía Interactiva de Sensores Físicos',
+  optical: 'Diccionario Maker y Guía de Sensores',
   audit: 'Auditoría CSV y Copiloto Gemini',
   chat: 'Chat SOC Multi-Turno (Gemini Gratuito)',
   firmware: 'Firmware CircuitPython y Guía',

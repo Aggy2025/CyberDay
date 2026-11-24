@@ -53,7 +53,7 @@ const NAV_ITEMS: Array<{
   {
     id: 'optical',
     label: 'Guía de Sensores',
-    sublabel: 'Luz, IMU, SHT30 y Botones',
+    sublabel: 'Diccionario Maker y 4 sensores',
     icon: Eye,
   },
   {

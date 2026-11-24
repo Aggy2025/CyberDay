@@ -117,7 +117,7 @@ export function ImuSensorGuide({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0 flex-1">
               <h2 className="font-display text-base font-semibold text-slate-900 dark:text-slate-100">
-                Diagrama 1. Principio MEMS: Acelerómetro y Giroscopio (LSM6DS)
+                Diagrama 1. Principio MEMS: Acelerómetro y Giroscopio (LSM6DS3TR-C · 0x6A)
               </h2>
               <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                 Visualiza cómo se desplaza la micro-masa sísmica lineal (g) y el marco rotacional (dps) ante sabotaje físico.
@@ -421,7 +421,7 @@ export function ImuSensorGuide({
 
           <div className="mt-3 space-y-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
             <p>
-              La unidad inercial (<strong className="text-slate-900 dark:text-slate-100">IMU LSM6DS</strong>) combina dos sensores MEMS complementarios en 6 grados de libertad sobre el bus I2C:
+              La unidad inercial (<strong className="text-slate-900 dark:text-slate-100">IMU LSM6DS3TR-C</strong>, dirección I2C <span className="font-mono">0x6A</span>) combina dos sensores MEMS complementarios en 6 grados de libertad. La librería <span className="font-mono">ideasense.py</span> entrega <span className="font-mono">m/s²</span> y <span className="font-mono">rad/s</span>, que <span className="font-mono">code.py</span> convierte a <span className="font-mono">g</span> y <span className="font-mono">dps</span>:
             </p>
             <p>
               <strong>1. Acelerómetro (ax, ay, az en g):</strong> mide aceleración lineal y gravedad. En reposo la magnitud total es <span className="font-mono">|a| ≈ 1.00 g</span>; cualquier golpe o vibración eleva <span className="font-mono">Δ|a| = ||a| - 1.0|</span>.

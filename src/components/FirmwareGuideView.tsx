@@ -26,7 +26,7 @@ const DEMO_SCRIPT_STEPS = [
   {
     step: '05. Reto interactivo Firewall 2D',
     detail:
-      'Invita al público a usar los botones físicos A y B de la tarjeta para bloquear paquetes DDoS/Phishing sin interrumpir el tráfico TLS legítimo.',
+      'Invita al público a usar la inclinación del IMU y los botones físicos A (ba) y B/C (bb) de la IdeaSense Explorer para bloquear paquetes DDoS/Phishing sin interrumpir el tráfico TLS legítimo.',
   },
   {
     step: '06. Auditoría forense y análisis con Gemini',
@@ -39,12 +39,12 @@ const MAKERLAB_PROTOTYPES = [
   {
     title: 'Prototipo 1 · Alarma física para rack o caja fuerte',
     detail:
-      'Combina LTR-303 + IMU en una caja impresa en 3D o acrílico: si sube la luz o se inclina la tapa, el ESP32 cambia la matriz 5×5 a rojo y envía alerta por BLE.',
+      'Combina LTR-303 (0x29) + IMU LSM6DS3TR-C (0x6A) en una caja acrílica: si sube la luz o se inclina la tapa, el ESP32 cambia la matriz 5×5 a rojo y envía alerta por BLE.',
   },
   {
-    title: 'Prototipo 2 · Token físico MFA (Botón A+B)',
+    title: 'Prototipo 2 · Token físico MFA (Botón A + B/C)',
     detail:
-      'Modifica code.py para emitir un token firmado solo cuando el usuario presiona físicamente A+B, bloqueando accesos tras 5 intentos fallidos.',
+      'Modifica code.py para emitir un token firmado solo cuando el usuario presiona físicamente A + B/C en el HT16K33, bloqueando accesos tras 5 intentos fallidos.',
   },
   {
     title: 'Prototipo 3 · Clasificador Edge AI offline',
@@ -52,9 +52,9 @@ const MAKERLAB_PROTOTYPES = [
       'Importa ideasense_cyber_knn.py desde Laboratorio IA dentro de la IdeaBoard para que el microcontrolador clasifique sabotaje sin depender de la PC.',
   },
   {
-    title: 'Prototipo 4 · Monitor ambiental de cuartos de servidores',
+    title: 'Prototipo 4 · Monitor térmico con Puente H',
     detail:
-      'Usa el SHT30 para detectar sobrecalentamiento o riesgo de condensación y accionar un ventilador o relé de protección desde un pin GPIO.',
+      'Usa el SHT30 (0x44) para detectar sobrecalentamiento o riesgo de condensación y accionar un ventilador real desde el doble Puente H integrado (MOTOR 1/2) de la IdeaBoard.',
   },
 ];
 
@@ -118,7 +118,16 @@ export function FirmwareGuideView() {
             </div>
           </div>
 
-          <pre className="mt-4 max-h-[520px] overflow-auto rounded-lg bg-slate-950 p-4 font-mono text-xs leading-relaxed text-slate-200">
+          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-300">
+            <strong className="text-slate-900 dark:text-slate-100">Cómo cargarlo en la IdeaBoard:</strong>{' '}
+            Conecta el cable Qwiic entre IdeaBoard e IdeaSense Explorer, abre{' '}
+            <span className="font-mono text-slate-900 dark:text-slate-100">ideacode.crcibernetica.com</span>{' '}
+            en Chrome/Edge por USB-C (puente serial CH340G), guarda <span className="font-mono">code.py</span> junto con{' '}
+            <span className="font-mono">ideasense.py</span> y ejecuta con <span className="font-mono">Ctrl+R</span>. El NeoPixel{' '}
+            <span className="font-mono">IO02</span> cambia a verde al enlazar por BLE.
+          </div>
+
+          <pre className="mt-3 max-h-[500px] overflow-auto rounded-lg bg-slate-950 p-4 font-mono text-xs leading-relaxed text-slate-200">
             {CYBER_FIRMWARE_CODE_PY}
           </pre>
         </section>

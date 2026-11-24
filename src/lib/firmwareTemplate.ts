@@ -82,7 +82,7 @@ Firmware CircuitPython 10.x para IdeaBoard (ESP32) + IdeaSense Explorer
 - Inicialización tolerante a fallos I2C (evita crash si 0x70 no responde).
 - Escanea el bus Qwiic/I2C e informa direcciones detectadas por consola serie.
 - Transmisión BLE Nordic UART (NUS) a 25 Hz (40 ms).
-- Lee IMU (LSM6DS 0x6A), Temp/Hum (SHT30 0x44), Luz (LTR-303 0x29) y botones A/B/C.
+- Lee IMU (LSM6DS3TR-C 0x6A), Temp/Hum (SHT30 0x44), Luz (LTR-303 0x29) y botones A/B/C.
 - Incluye bitmask 'sim' (0 = todo real; 1=T/H, 2=IMU, 4=Luz simulados).
 ===============================================================================
 """

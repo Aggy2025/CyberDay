@@ -7,7 +7,7 @@ interface AppFooterProps {
 const FOOTER_LINKS: Array<{ tab: ActiveTab; label: string }> = [
   { tab: 'soc', label: 'Monitor SOC' },
   { tab: 'ailab', label: 'Laboratorio IA' },
-  { tab: 'optical', label: 'Sensores' },
+  { tab: 'optical', label: 'Sensores y Maker' },
   { tab: 'game', label: 'Juegos' },
   { tab: 'firmware', label: 'Firmware' },
 ];

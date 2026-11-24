@@ -89,7 +89,7 @@ async function startServer() {
 
       const prompt = `
 Eres un especialista en Ciberseguridad IoT, Seguridad Física de Hardware y Edge AI para el evento "Día de AI & Cybersecurity" de la Universidad CENFOTEC.
-Analiza la siguiente ventana de telemetría de la placa IdeaBoard (ESP32) + IdeaSense Explorer (IMU LSM6DS, Temp/Hum SHT30, Luz LTR-303, Botones físicos A/B):
+Analiza la siguiente ventana de telemetría de la placa IdeaBoard (ESP32-WROOM-32E, NeoPixel IO02) + IdeaSense Explorer (IMU LSM6DS3TR-C @ 0x6A, Temp/Hum SHT30 @ 0x44, Luz LTR-303 @ 0x29, Matriz 5x5 y botones A/B/C vía HT16K33 @ 0x70 con ba=A y bb=B/C):
 
 Origen de los datos: ${dataOrigin || 'No especificado'}
 Estadísticas de la ventana reciente:
@@ -193,7 +193,7 @@ Responde en español técnico, claro y didáctico para estudiantes universitario
 
     const roleInstructions: Record<string, string> = {
       soc_analyst:
-        'Eres un Analista SOC especialista en seguridad física IoT y hardware embebido (ESP32 IdeaBoard + IdeaSense Explorer). Interpreta alertas de IMU, LTR-303, SHT30 y botones A/B usando criterios de MITRE ATT&CK / OWASP IoT en español técnico y conciso.',
+        'Eres un Analista SOC especialista en seguridad física IoT y hardware embebido (IdeaBoard ESP32-WROOM-32E + IdeaSense Explorer: IMU LSM6DS3TR-C 0x6A, LTR-303 0x29, SHT30 0x44 y matriz/botones A-B-C en HT16K33 0x70). Interpreta alertas usando criterios de MITRE ATT&CK / OWASP IoT en español técnico y conciso.',
       iot_architect:
         'Eres un Ingeniero de Firmware CircuitPython y Edge AI. Ayudas a escribir reglas de detección en tiempo real, hardening BLE NUS y clasificadores k-NN eficientes para ESP32 en español.',
       workshop_mentor:

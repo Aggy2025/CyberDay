@@ -112,10 +112,10 @@ export function OpticalSensorGuide({
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0 flex-1">
                 <h2 className="font-display text-base font-semibold text-slate-900 dark:text-slate-100">
-                  Diagrama 1. Principio Físico de un Sensor de Luz (LDR)
+                  Diagrama 1. Principio Óptico (Concepto LDR vs Sensor Digital LTR-303)
                 </h2>
                 <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                  Manipula la luz incidente o enlaza el sensor real para ver cómo varía la resistencia y el voltaje de salida.
+                  Manipula la luz incidente o enlaza el sensor digital LTR-303 (0x29) de la placa para comparar la señal en cuentas con el equivalente analógico LDR.
                 </p>
               </div>
 
@@ -667,25 +667,25 @@ export function OpticalSensorGuide({
             <div className="flex items-center gap-2">
               <Sun className="h-4 w-4 text-amber-500" aria-hidden="true" />
               <h2 className="font-display text-base font-semibold text-slate-900 dark:text-slate-100">
-                ¿Qué es un sensor de luz (LDR)?
+                ¿Cómo mide la luz el LTR-303 (y su base LDR)?
               </h2>
             </div>
 
             <div className="mt-3 space-y-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
               <p>
-                Un sensor de luz tipo <strong className="text-slate-900 dark:text-slate-100">LDR</strong> (<em>Light Dependent Resistor</em> o fotorresistencia) es un componente semiconductor cuya resistencia eléctrica disminuye conforme aumenta la luz que incide sobre su superficie fotosensible.
+                La tarjeta <strong className="text-slate-900 dark:text-slate-100">IdeaSense Explorer</strong> monta un fotodiodo digital <span className="font-mono">LTR-303</span> en el bus I2C (<span className="font-mono">0x29</span>), que integra luz visible + infrarroja y entrega <span className="font-mono">cuentas</span> digitales directas sin requerir divisor resistivo externo.
               </p>
               <p>
-                En oscuridad ofrece decenas de kiloohmios (<span className="font-mono">~100 kΩ</span>); al recibir fotones libera electrones en su material y cae por debajo de <span className="font-mono">1 kΩ</span>. Al conectarlo en un divisor de tensión, esa variación se convierte en una señal medible por un microcontrolador.
+                Para comprender la física en el MakerLab, el Diagrama 1 muestra además el equivalente clásico de una fotorresistencia <strong className="text-slate-900 dark:text-slate-100">LDR</strong>: en oscuridad ofrece <span className="font-mono">~100 kΩ</span> y bajo luz intensa cae por debajo de <span className="font-mono">1 kΩ</span>, cambiando el voltaje <span className="font-mono">Vout</span> de salida.
               </p>
             </div>
 
             <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3.5 text-xs dark:border-slate-800 dark:bg-slate-950/60">
               <div className="font-semibold text-slate-900 dark:text-slate-100">
-                Del LDR clásico al sensor de luz digital LTR-303
+                Ventaja del LTR-303 en Ciberseguridad IoT
               </div>
               <p className="mt-1 leading-relaxed text-slate-600 dark:text-slate-300">
-                Mientras un LDR analógico requiere calibrar un pin ADC, la tarjeta <strong className="text-slate-900 dark:text-slate-100">IdeaSense Explorer</strong> integra el sensor de luz digital <span className="font-mono">LTR-303</span> en el bus I2C (<span className="font-mono">0x29</span>), enviando lecturas numéricas directas a <span className="font-mono">25 Hz</span> sobre Bluetooth LE para detectar anomalías físicas sin ruido de conversión.
+                Al contar con ADC interno de 16 bits y respuesta espectral visible + IR, el <span className="font-mono">LTR-303</span> muestreado a <span className="font-mono">25 Hz</span> por <span className="font-mono">ideasense.py</span> (<span className="font-mono">idea.light</span>) detecta aperturas de gabinete e inyecciones de luz sin ruido analógico.
               </p>
             </div>
           </section>
