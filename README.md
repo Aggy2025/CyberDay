@@ -6,17 +6,27 @@ Conecta en tiempo real una **IdeaBoard (`ESP32-WROOM-32E`)** junto con la placa 
 
 ---
 
+## Enlaces en vivo para probar
+
+| Entorno | URL | Qué incluye |
+| :--- | :--- | :--- |
+| **Aplicación completa (Cloud Run · Recomendado)** | [https://ais-pre-6hpzxi4hy7egq3dgzqfpum-427410295521.us-west2.run.app/](https://ais-pre-6hpzxi4hy7egq3dgzqfpum-427410295521.us-west2.run.app/) | Todas las funciones: Monitor SOC, Gemelo 3D, Laboratorio k-NN, Juegos, Diccionario Maker, Web Bluetooth **y** análisis/chat con **Gemini** (con servidor Node/Express). |
+| **Versión estática (GitHub Pages)** | [https://aggy2025.github.io/CyberDay/](https://aggy2025.github.io/CyberDay/) | Todas las funciones locales del navegador (Modo Demo, Web Bluetooth, Gemelo 3D, Laboratorio k-NN, Juegos, Diccionario Maker y Firmware). *Nota: sin backend `/api/*` para Gemini.* |
+
+---
+
 ## Tabla de contenidos
 
-1. [¿Qué demuestra este proyecto?](#-qué-demuestra-este-proyecto)
-2. [Arquitectura de Hardware: IdeaBoard vs IdeaSense Explorer](#-arquitectura-de-hardware-ideaboard-vs-ideasense-explorer)
-3. [Módulos de la aplicación web](#-módulos-de-la-aplicación-web)
-4. [Protocolo BLE y formato de telemetría (25 Hz)](#-protocolo-ble-y-formato-de-telemetría-25-hz)
-5. [Instalación y ejecución local](#-instalación-y-ejecución-local)
-6. [Carga del firmware CircuitPython (`code.py`) en la IdeaBoard](#-carga-del-firmware-circuitpython-codepy-en-la-ideaboard)
-7. [Pruebas automatizadas y verificación](#-pruebas-automatizadas-y-verificación)
-8. [Estructura del proyecto](#-estructura-del-proyecto)
-9. [Referencias de hardware](#-referencias-de-hardware)
+1. [Enlaces en vivo para probar](#enlaces-en-vivo-para-probar)
+2. [¿Qué demuestra este proyecto?](#-qué-demuestra-este-proyecto)
+3. [Arquitectura de Hardware: IdeaBoard vs IdeaSense Explorer](#-arquitectura-de-hardware-ideaboard-vs-ideasense-explorer)
+4. [Módulos de la aplicación web](#-módulos-de-la-aplicación-web)
+5. [Protocolo BLE y formato de telemetría (25 Hz)](#-protocolo-ble-y-formato-de-telemetría-25-hz)
+6. [Instalación y ejecución local](#-instalación-y-ejecución-local)
+7. [Carga del firmware CircuitPython (`code.py`) en la IdeaBoard](#-carga-del-firmware-circuitpython-codepy-en-la-ideaboard)
+8. [Pruebas automatizadas y verificación](#-pruebas-automatizadas-y-verificación)
+9. [Estructura del proyecto](#-estructura-del-proyecto)
+10. [Referencias de hardware](#-referencias-de-hardware)
 
 ---
 
