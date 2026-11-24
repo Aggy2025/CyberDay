@@ -3,7 +3,11 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, ThinkingLevel, Type } from '@google/genai';
+import {
+  buildGeminiChatTurns,
+  formatGeminiErrorResponse,
+} from './src/lib/geminiServerHelpers.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,21 +40,43 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function runWithFreeModelFallback<T>(
   preferred: FreeModelId,
   runner: (model: FreeModelId) => Promise<T>,
 ): Promise<{ result: T; usedModel: FreeModelId }> {
   const alternate: FreeModelId =
     preferred === 'gemini-4-hydrogen' ? 'gemini-3.1-flash-lite' : 'gemini-4-hydrogen';
-  try {
-    const result = await withTimeout(runner(preferred), 15000);
-    return { result, usedModel: preferred };
-  } catch (err) {
-    if (!isTransientDemandError(err)) throw err;
-    console.warn(`[Gemini Fallback] ${preferred} temporalmente saturado; intentando con ${alternate}.`);
-    const result = await runner(alternate);
-    return { result, usedModel: alternate };
+  const schedule: Array<{ model: FreeModelId; delayBeforeMs: number }> = [
+    { model: preferred, delayBeforeMs: 0 },
+    { model: alternate, delayBeforeMs: 650 },
+    { model: preferred, delayBeforeMs: 1400 },
+    { model: alternate, delayBeforeMs: 2400 },
+  ];
+
+  let lastError: unknown;
+  for (let i = 0; i < schedule.length; i++) {
+    const step = schedule[i];
+    if (step.delayBeforeMs > 0) {
+      await sleep(step.delayBeforeMs);
+    }
+    try {
+      const result = await withTimeout(runner(step.model), 12000);
+      return { result, usedModel: step.model };
+    } catch (err) {
+      lastError = err;
+      if (!isTransientDemandError(err)) {
+        throw err;
+      }
+      console.warn(
+        `[Gemini Retry ${i + 1}/${schedule.length}] ${step.model} saturado temporalmente.`,
+      );
+    }
   }
+  throw lastError;
 }
 
 async function startServer() {
@@ -114,6 +140,9 @@ Responde en español técnico, claro y didáctico para estudiantes universitario
             model: modelName,
             contents: prompt,
             config: {
+              ...(modelName === 'gemini-4-hydrogen'
+                ? { thinkingConfig: { thinkingLevel: ThinkingLevel.LOW } }
+                : {}),
               systemInstruction:
                 'Devuelve estrictamente JSON válido conforme al esquema solicitado. Sé preciso con las magnitudes físicas observadas (g, dps, cuentas de luz, °C) y propón código CircuitPython realista para la librería ideasense.',
               responseMimeType: 'application/json',
@@ -164,11 +193,10 @@ Responde en español técnico, claro y didáctico para estudiantes universitario
       const parsed = JSON.parse(rawText);
       res.json({ analysis: parsed, model: usedModel });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error inesperado al consultar Gemini.';
-      console.error('[Gemini Analyze Error]', message);
-      res.status(502).json({
-        error: `No se pudo completar el análisis con Gemini: ${message}`,
-      });
+      const rawMessage = error instanceof Error ? error.message : 'Error inesperado al consultar Gemini.';
+      console.error('[Gemini Analyze Error]', rawMessage);
+      const formatted = formatGeminiErrorResponse(error);
+      res.status(formatted.httpStatus).json({ error: formatted.message });
     }
   });
 
@@ -185,6 +213,12 @@ Responde en español técnico, claro y didáctico para estudiantes universitario
     const { messages, model, roleId, telemetryContext } = req.body ?? {};
     if (!Array.isArray(messages) || messages.length === 0) {
       res.status(400).json({ error: 'Se requiere el historial de mensajes.' });
+      return;
+    }
+
+    const { history: historyTurns, latestUserMessage } = buildGeminiChatTurns(messages);
+    if (!latestUserMessage) {
+      res.status(400).json({ error: 'Escribe una pregunta válida antes de enviar.' });
       return;
     }
 
@@ -215,12 +249,6 @@ Responde en español técnico, claro y didáctico para estudiantes universitario
         },
       });
 
-      const historyTurns = messages.slice(0, -1).map((m: { role: string; text: string }) => ({
-        role: m.role === 'model' ? 'model' : 'user',
-        parts: [{ text: String(m.text ?? '') }],
-      }));
-      const latestUserMessage = String(messages[messages.length - 1]?.text ?? '');
-
       const { result: response, usedModel } = await runWithFreeModelFallback(
         selectedModel,
         async (modelName) => {
@@ -228,6 +256,9 @@ Responde en español técnico, claro y didáctico para estudiantes universitario
             model: modelName,
             history: historyTurns,
             config: {
+              ...(modelName === 'gemini-4-hydrogen'
+                ? { thinkingConfig: { thinkingLevel: ThinkingLevel.LOW } }
+                : {}),
               systemInstruction,
             },
           });
@@ -240,11 +271,10 @@ Responde en español técnico, claro y didáctico para estudiantes universitario
         model: usedModel,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error inesperado en el chat.';
-      console.error('[Gemini Chat Error]', message);
-      res.status(502).json({
-        error: `No se pudo generar respuesta en el chat: ${message}`,
-      });
+      const rawMessage = error instanceof Error ? error.message : 'Error inesperado en el chat.';
+      console.error('[Gemini Chat Error]', rawMessage);
+      const formatted = formatGeminiErrorResponse(error);
+      res.status(formatted.httpStatus).json({ error: formatted.message });
     }
   });
 

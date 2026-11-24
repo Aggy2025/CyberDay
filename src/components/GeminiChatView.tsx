@@ -58,6 +58,7 @@ export function GeminiChatView({
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [lastFailedPrompt, setLastFailedPrompt] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome-1',
@@ -75,6 +76,7 @@ export function GeminiChatView({
     if (!content || sending) return;
 
     setErrorMsg(null);
+    setLastFailedPrompt(null);
     const userMsg: ChatMessage = {
       id: `u-${Date.now()}`,
       role: 'user',
@@ -82,6 +84,10 @@ export function GeminiChatView({
       ts: Date.now(),
     };
     const nextThread = [...messages, userMsg];
+    const apiMessages = nextThread
+      .filter((m) => !m.id.startsWith('welcome-') && !m.id.startsWith('reset-'))
+      .map((m) => ({ role: m.role, text: m.text }));
+
     setMessages(nextThread);
     if (!customText) setInput('');
     setSending(true);
@@ -91,7 +97,7 @@ export function GeminiChatView({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: nextThread.map((m) => ({ role: m.role, text: m.text })),
+          messages: apiMessages,
           model,
           roleId,
           telemetryContext: includeTelemetry
@@ -109,6 +115,9 @@ export function GeminiChatView({
         error?: string;
       }>(resp, 'No se pudo obtener respuesta del chat.');
       if (!parsed.ok || !parsed.data?.reply) {
+        setMessages(messages);
+        if (!customText) setInput(content);
+        setLastFailedPrompt(content);
         setErrorMsg(parsed.error || 'No se pudo obtener respuesta del chat.');
       } else {
         const replyText = parsed.data.reply;
@@ -126,6 +135,9 @@ export function GeminiChatView({
         setTimeout(() => threadEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
       }
     } catch (err) {
+      setMessages(messages);
+      if (!customText) setInput(content);
+      setLastFailedPrompt(content);
       setErrorMsg(err instanceof Error ? err.message : 'Error de red al consultar el chat.');
     } finally {
       setSending(false);
@@ -284,10 +296,22 @@ export function GeminiChatView({
         {errorMsg && (
           <div
             role="alert"
-            className="mx-5 mb-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-200"
+            className="mx-5 mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-200"
           >
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600 dark:text-red-400" aria-hidden="true" />
-            <span>{errorMsg}</span>
+            <div className="flex min-w-0 flex-1 items-start gap-2">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600 dark:text-red-400" aria-hidden="true" />
+              <span>{errorMsg}</span>
+            </div>
+            {lastFailedPrompt && (
+              <button
+                type="button"
+                onClick={() => sendMessage(lastFailedPrompt)}
+                disabled={sending}
+                className="shrink-0 rounded-md border border-red-300 bg-white px-2.5 py-1 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50 dark:border-red-800 dark:bg-red-950 dark:text-red-200 dark:hover:bg-red-900"
+              >
+                Reintentar
+              </button>
+            )}
           </div>
         )}
 
