@@ -36,14 +36,14 @@ const ROLE_OPTIONS: Array<{ id: ChatRoleId; label: string; description: string }
 
 const MODEL_OPTIONS: Array<{ id: FreeGeminiModel; label: string; note: string }> = [
   {
-    id: 'gemini-4-hydrogen',
-    label: 'Gemini 4 Hydrogen (Gratuito)',
-    note: 'Equilibrado para razonamiento y análisis SOC.',
+    id: 'gemini-3.1-flash-lite',
+    label: 'Gemini 3.1 Flash Lite (Gratuito · Rápido)',
+    note: 'Baja latencia y alta disponibilidad para respuestas rápidas en taller.',
   },
   {
-    id: 'gemini-3.1-flash-lite',
-    label: 'Gemini 3.1 Flash Lite (Gratuito)',
-    note: 'Baja latencia para respuestas rápidas en taller.',
+    id: 'gemini-4-hydrogen',
+    label: 'Gemini 4 Hydrogen (Gratuito)',
+    note: 'Con respaldo automático a Flash Lite ante saturación.',
   },
 ];
 
@@ -53,7 +53,7 @@ export function GeminiChatView({
   alerts,
 }: GeminiChatViewProps) {
   const [roleId, setRoleId] = useState<ChatRoleId>('soc_analyst');
-  const [model, setModel] = useState<FreeGeminiModel>('gemini-4-hydrogen');
+  const [model, setModel] = useState<FreeGeminiModel>('gemini-3.1-flash-lite');
   const [includeTelemetry, setIncludeTelemetry] = useState(true);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -62,7 +62,7 @@ export function GeminiChatView({
     {
       id: 'welcome-1',
       role: 'model',
-      model: 'gemini-4-hydrogen',
+      model: 'gemini-3.1-flash-lite',
       ts: Date.now(),
       text: 'Hola. Soy tu asistente gratuito de IA y Ciberseguridad para la plataforma IdeaSense Explorer. Puedes preguntarme sobre las alertas físicas detectadas, cómo endurecer el firmware CircuitPython o cómo explicar este ataque en el Día de AI & Cybersecurity.',
     },

@@ -11,6 +11,48 @@ const __dirname = path.dirname(__filename);
 const PORT = Number(process.env.PORT || 3000);
 const isProduction = process.env.NODE_ENV === 'production';
 
+type FreeModelId = 'gemini-3.1-flash-lite' | 'gemini-4-hydrogen';
+
+function isTransientDemandError(err: unknown): boolean {
+  const status = (err as { status?: number; code?: number } | null)?.status ?? (err as { code?: number } | null)?.code;
+  if (status === 503 || status === 429) return true;
+  const msg = err instanceof Error ? err.message : String(err ?? '');
+  return /503|UNAVAILABLE|high demand|overloaded|429|RESOURCE_EXHAUSTED|TIMEOUT/i.test(msg);
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('TIMEOUT: model response exceeded window')), ms);
+    promise.then(
+      (val) => {
+        clearTimeout(timer);
+        resolve(val);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
+async function runWithFreeModelFallback<T>(
+  preferred: FreeModelId,
+  runner: (model: FreeModelId) => Promise<T>,
+): Promise<{ result: T; usedModel: FreeModelId }> {
+  const alternate: FreeModelId =
+    preferred === 'gemini-4-hydrogen' ? 'gemini-3.1-flash-lite' : 'gemini-4-hydrogen';
+  try {
+    const result = await withTimeout(runner(preferred), 15000);
+    return { result, usedModel: preferred };
+  } catch (err) {
+    if (!isTransientDemandError(err)) throw err;
+    console.warn(`[Gemini Fallback] ${preferred} temporalmente saturado; intentando con ${alternate}.`);
+    const result = await runner(alternate);
+    return { result, usedModel: alternate };
+  }
+}
+
 async function startServer() {
   const app = express();
   app.use(express.json({ limit: '1mb' }));
@@ -65,58 +107,62 @@ ${userQuestion || 'Evalúa si existe un incidente físico, de canal lateral o de
 Responde en español técnico, claro y didáctico para estudiantes universitarios de ciberseguridad e IA.
       `.trim();
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-4-hydrogen',
-        contents: prompt,
-        config: {
-          systemInstruction:
-            'Devuelve estrictamente JSON válido conforme al esquema solicitado. Sé preciso con las magnitudes físicas observadas (g, dps, cuentas de luz, °C) y propón código CircuitPython realista para la librería ideasense.',
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              resumenEjecutivo: {
-                type: Type.STRING,
-                description: 'Diagnóstico conciso del comportamiento físico y cibernético observado.',
-              },
-              nivelRiesgo: {
-                type: Type.STRING,
-                description: 'Debe ser exactamente uno de: Bajo, Medio, Alto, Crítico',
-              },
-              vectorAtaque: {
-                type: Type.STRING,
-                description: 'Vector probable (ej. Hardware Tampering, Canal Encubierto Óptico, Fuerza Bruta Física, Operación Nominal).',
-              },
-              indicadoresClave: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-                description: 'Lista de 3 a 4 evidencias concretas tomadas de la telemetría.',
-              },
-              accionesMitigacion: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-                description: 'Lista de 3 a 4 contramedidas técnicas aplicables en firmware, cifrado o seguridad física.',
-              },
-              reglaDeteccionPython: {
-                type: Type.STRING,
-                description: 'Fragmento corto en CircuitPython para detectar o mitigar este patrón en la IdeaBoard.',
+      const { result: response, usedModel } = await runWithFreeModelFallback(
+        'gemini-3.1-flash-lite',
+        (modelName) =>
+          ai.models.generateContent({
+            model: modelName,
+            contents: prompt,
+            config: {
+              systemInstruction:
+                'Devuelve estrictamente JSON válido conforme al esquema solicitado. Sé preciso con las magnitudes físicas observadas (g, dps, cuentas de luz, °C) y propón código CircuitPython realista para la librería ideasense.',
+              responseMimeType: 'application/json',
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  resumenEjecutivo: {
+                    type: Type.STRING,
+                    description: 'Diagnóstico conciso del comportamiento físico y cibernético observado.',
+                  },
+                  nivelRiesgo: {
+                    type: Type.STRING,
+                    description: 'Debe ser exactamente uno de: Bajo, Medio, Alto, Crítico',
+                  },
+                  vectorAtaque: {
+                    type: Type.STRING,
+                    description: 'Vector probable (ej. Hardware Tampering, Canal Encubierto Óptico, Fuerza Bruta Física, Operación Nominal).',
+                  },
+                  indicadoresClave: {
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING },
+                    description: 'Lista de 3 a 4 evidencias concretas tomadas de la telemetría.',
+                  },
+                  accionesMitigacion: {
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING },
+                    description: 'Lista de 3 a 4 contramedidas técnicas aplicables en firmware, cifrado o seguridad física.',
+                  },
+                  reglaDeteccionPython: {
+                    type: Type.STRING,
+                    description: 'Fragmento corto en CircuitPython para detectar o mitigar este patrón en la IdeaBoard.',
+                  },
+                },
+                required: [
+                  'resumenEjecutivo',
+                  'nivelRiesgo',
+                  'vectorAtaque',
+                  'indicadoresClave',
+                  'accionesMitigacion',
+                  'reglaDeteccionPython',
+                ],
               },
             },
-            required: [
-              'resumenEjecutivo',
-              'nivelRiesgo',
-              'vectorAtaque',
-              'indicadoresClave',
-              'accionesMitigacion',
-              'reglaDeteccionPython',
-            ],
-          },
-        },
-      });
+          }),
+      );
 
       const rawText = (response.text ?? '{}').trim();
       const parsed = JSON.parse(rawText);
-      res.json({ analysis: parsed });
+      res.json({ analysis: parsed, model: usedModel });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error inesperado al consultar Gemini.';
       console.error('[Gemini Analyze Error]', message);
@@ -142,8 +188,8 @@ Responde en español técnico, claro y didáctico para estudiantes universitario
       return;
     }
 
-    const allowedModels = new Set(['gemini-4-hydrogen', 'gemini-3.1-flash-lite']);
-    const selectedModel = allowedModels.has(model) ? model : 'gemini-4-hydrogen';
+    const allowedModels = new Set<FreeModelId>(['gemini-3.1-flash-lite', 'gemini-4-hydrogen']);
+    const selectedModel: FreeModelId = allowedModels.has(model) ? model : 'gemini-3.1-flash-lite';
 
     const roleInstructions: Record<string, string> = {
       soc_analyst:
@@ -175,18 +221,23 @@ Responde en español técnico, claro y didáctico para estudiantes universitario
       }));
       const latestUserMessage = String(messages[messages.length - 1]?.text ?? '');
 
-      const chat = ai.chats.create({
-        model: selectedModel,
-        history: historyTurns,
-        config: {
-          systemInstruction,
+      const { result: response, usedModel } = await runWithFreeModelFallback(
+        selectedModel,
+        async (modelName) => {
+          const chat = ai.chats.create({
+            model: modelName,
+            history: historyTurns,
+            config: {
+              systemInstruction,
+            },
+          });
+          return chat.sendMessage({ message: latestUserMessage });
         },
-      });
+      );
 
-      const response = await chat.sendMessage({ message: latestUserMessage });
       res.json({
         reply: response.text ?? 'Sin respuesta del modelo.',
-        model: selectedModel,
+        model: usedModel,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error inesperado en el chat.';

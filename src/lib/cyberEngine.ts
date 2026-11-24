@@ -2,8 +2,6 @@ import type {
   AuditRow,
   CyberScenario,
   DataOriginLabel,
-  HeatmapGroupingMode,
-  HeatmapMatrix,
   KnnPrediction,
   KnnSample,
   SecurityAlert,
@@ -506,117 +504,6 @@ def classify_knn(window_packets, k=3):
     best_label = max(votes, key=votes.get)
     return best_label, scored[0][0]
 `;
-}
-
-const HEATMAP_CATEGORIES: Record<
-  SecurityAlert['category'],
-  { typeLabel: string; typeSub: string; locationLabel: string; locationSub: string }
-> = {
-  tampering: {
-    typeLabel: 'Sabotaje Físico',
-    typeSub: 'Vibración / Impacto / Traslado',
-    locationLabel: 'Chasis · IMU LSM6DS',
-    locationSub: 'Bus I2C (0x6A) · Acelerómetro/Giro',
-  },
-  optical: {
-    typeLabel: 'Intrusión Óptica',
-    typeSub: 'Apertura / Inyección de Luz',
-    locationLabel: 'Gabinete · Sensor LTR-303',
-    locationSub: 'Bus I2C (0x29) · Fotodiodo',
-  },
-  thermal: {
-    typeLabel: 'Anomalía Térmica',
-    typeSub: 'Sobrecalentamiento / HVAC',
-    locationLabel: 'Núcleo PCB · Sensor SHT30',
-    locationSub: 'Bus I2C (0x44) · Temp/Humedad',
-  },
-  access: {
-    typeLabel: 'Fuerza Bruta Física',
-    typeSub: 'Ráfaga de Autenticación MFA',
-    locationLabel: 'Panel Frontal · Botones A/B',
-    locationSub: 'GPIO · Entradas Físicas',
-  },
-};
-
-export function buildAlertHeatmapMatrix(
-  alerts: SecurityAlert[],
-  mode: HeatmapGroupingMode,
-  nowTs: number = Date.now(),
-  bucketCount: number = 8,
-  bucketWindowMs: number = 15000,
-): HeatmapMatrix {
-  const safeBuckets = Math.max(2, bucketCount);
-  const buckets: string[] = [];
-  for (let i = safeBuckets - 1; i >= 0; i--) {
-    const secsAgo = Math.round((i * bucketWindowMs) / 1000);
-    buckets.push(secsAgo === 0 ? 'Ahora' : `-${secsAgo}s`);
-  }
-
-  const order: SecurityAlert['category'][] = ['tampering', 'optical', 'thermal', 'access'];
-  const rowMap = new Map<
-    SecurityAlert['category'],
-    {
-      cells: number[];
-      total: number;
-      criticalCount: number;
-      latestTs: number;
-      latestDetail: string | null;
-    }
-  >();
-
-  for (const cat of order) {
-    rowMap.set(cat, {
-      cells: Array(safeBuckets).fill(0),
-      total: 0,
-      criticalCount: 0,
-      latestTs: -1,
-      latestDetail: null,
-    });
-  }
-
-  for (const al of alerts) {
-    const entry = rowMap.get(al.category);
-    if (!entry) continue;
-    const ageMs = Math.max(0, nowTs - al.ts);
-    const reverseIdx = Math.floor(ageMs / bucketWindowMs);
-    const colIdx = safeBuckets - 1 - reverseIdx;
-    // Clamp older session alerts into the oldest visible bucket so history remains represented
-    const targetCol = colIdx < 0 ? 0 : Math.min(safeBuckets - 1, colIdx);
-    entry.cells[targetCol] += 1;
-    entry.total += 1;
-    if (al.severity === 'critical') {
-      entry.criticalCount += 1;
-    }
-    if (al.ts >= entry.latestTs) {
-      entry.latestTs = al.ts;
-      entry.latestDetail = al.detail;
-    }
-  }
-
-  let maxCellValue = 0;
-  const rows = order.map((cat) => {
-    const meta = HEATMAP_CATEGORIES[cat];
-    const data = rowMap.get(cat)!;
-    for (const c of data.cells) {
-      if (c > maxCellValue) maxCellValue = c;
-    }
-    return {
-      key: cat,
-      label: mode === 'type' ? meta.typeLabel : meta.locationLabel,
-      sublabel: mode === 'type' ? meta.typeSub : meta.locationSub,
-      cells: data.cells,
-      total: data.total,
-      criticalCount: data.criticalCount,
-      latestDetail: data.latestDetail,
-    };
-  });
-
-  return {
-    buckets,
-    rows,
-    maxCellValue,
-    totalAlerts: alerts.length,
-  };
 }
 
 export function computeThreatTrendPoint(

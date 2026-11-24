@@ -15,7 +15,6 @@ import type {
   TelemetryPacket,
   ThreatTrendPoint,
 } from '../lib/types';
-import { AttackFrequencyHeatmap } from './AttackFrequencyHeatmap';
 import { BoardSchematicSvg } from './BoardSchematicSvg';
 import { ThreatTrendChart } from './ThreatTrendChart';
 
@@ -576,9 +575,6 @@ export function SocMonitorView({
 
       {/* Recharts Temporal AI Threat Level Trend */}
       <ThreatTrendChart data={threatHistory} />
-
-      {/* Physical Attack Frequency Heatmap categorized by attack type or sensor location */}
-      <AttackFrequencyHeatmap alerts={alerts} />
     </div>
   );
 }

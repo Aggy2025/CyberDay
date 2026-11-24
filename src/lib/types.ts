@@ -136,25 +136,6 @@ export interface GeminiIncidentAnalysis {
   reglaDeteccionPython: string;
 }
 
-export type HeatmapGroupingMode = 'type' | 'location';
-
-export interface HeatmapRow {
-  key: string;
-  label: string;
-  sublabel: string;
-  cells: number[];
-  total: number;
-  criticalCount: number;
-  latestDetail: string | null;
-}
-
-export interface HeatmapMatrix {
-  buckets: string[];
-  rows: HeatmapRow[];
-  maxCellValue: number;
-  totalAlerts: number;
-}
-
 export type ChatRoleId = 'soc_analyst' | 'iot_architect' | 'workshop_mentor';
 export type FreeGeminiModel = 'gemini-4-hydrogen' | 'gemini-3.1-flash-lite';
 

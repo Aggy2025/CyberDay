@@ -29,7 +29,7 @@ const NAV_ITEMS: Array<{
   {
     id: 'soc',
     label: 'Monitor SOC',
-    sublabel: 'Telemetría 25 Hz y Mapa Calor',
+    sublabel: 'Telemetría 25 Hz y Tendencia IA',
     icon: Activity,
   },
   {

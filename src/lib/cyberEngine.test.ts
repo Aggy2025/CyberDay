@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  buildAlertHeatmapMatrix,
   classifyTelemetryWindow,
   computeThreatTrendPoint,
   createBaselineCyberDataset,
@@ -139,54 +138,6 @@ test('generateCircuitPythonClassifier generates valid Python model definition', 
   assert.ok(py.includes('def classify_knn'));
   assert.ok(py.includes('SAMPLES ='));
   assert.ok(py.includes('optical_breach'));
-});
-
-test('buildAlertHeatmapMatrix aggregates alerts by time bucket and grouping mode', () => {
-  const now = 1_760_000_120_000;
-  const alerts = [
-    {
-      id: 'a1',
-      ts: now - 2_000,
-      severity: 'critical' as const,
-      category: 'tampering' as const,
-      title: 'T1',
-      detail: 'Impacto IMU 0.8g',
-      vectorTag: 'Tampering',
-    },
-    {
-      id: 'a2',
-      ts: now - 5_000,
-      severity: 'critical' as const,
-      category: 'tampering' as const,
-      title: 'T2',
-      detail: 'Impacto IMU 0.9g',
-      vectorTag: 'Tampering',
-    },
-    {
-      id: 'a3',
-      ts: now - 35_000,
-      severity: 'warning' as const,
-      category: 'optical' as const,
-      title: 'O1',
-      detail: 'Luz 810 cuentas',
-      vectorTag: 'Optical',
-    },
-  ];
-
-  const byType = buildAlertHeatmapMatrix(alerts, 'type', now, 8, 15000);
-  assert.equal(byType.totalAlerts, 3);
-  assert.equal(byType.maxCellValue, 2);
-  const tamperRow = byType.rows.find((r) => r.key === 'tampering');
-  assert.ok(tamperRow);
-  assert.equal(tamperRow.label, 'Sabotaje Físico');
-  assert.equal(tamperRow.cells[7], 2);
-  assert.equal(tamperRow.criticalCount, 2);
-
-  const byLoc = buildAlertHeatmapMatrix(alerts, 'location', now, 8, 15000);
-  const opticalRow = byLoc.rows.find((r) => r.key === 'optical');
-  assert.ok(opticalRow);
-  assert.equal(opticalRow.label, 'Gabinete · Sensor LTR-303');
-  assert.equal(opticalRow.cells[5], 1);
 });
 
 test('computeThreatTrendPoint maps normal vs attack AI predictions into 0-100 threat score', () => {
