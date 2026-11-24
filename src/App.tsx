@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AiLabView } from './components/AiLabView';
+import { AppFooter } from './components/AppFooter';
 import { AuditCopilotView } from './components/AuditCopilotView';
 import { Board3DSceneView } from './components/Board3DSceneView';
 import { CyberGamesHubView } from './components/CyberGamesHubView';
@@ -377,6 +378,8 @@ export default function App() {
 
           {activeTab === 'firmware' && <FirmwareGuideView />}
         </main>
+
+        <AppFooter onNavigateTab={setActiveTab} />
       </div>
     </div>
   );
