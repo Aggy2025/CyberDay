@@ -735,7 +735,7 @@ export function OpticalSensorGuide({
                   <span>03. Contención SOC, Matriz 5×5 y Auditoría</span>
                 </div>
                 <p className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-                  El evento eleva el índice de amenaza en el gráfico temporal, actualiza el mapa de calor, cambia la matriz LED a alerta y queda trazado en el CSV forense para análisis con Gemini.
+                  El evento eleva el índice de amenaza en el gráfico temporal, registra la alerta en el Monitor SOC, cambia la matriz LED a alerta y queda trazado en el CSV forense para análisis con Gemini.
                 </p>
               </div>
             </div>

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { KeyRound, Move, Sun, Thermometer } from 'lucide-react';
+import { ArrowRight, Cpu, KeyRound, Move, Play, Sun, Thermometer, Wrench } from 'lucide-react';
 import { computeAccelMagnitude, computeGyroMagnitude } from '../lib/cyberEngine';
-import type { SecurityThresholds, TelemetryPacket } from '../lib/types';
+import { MAKERLAB_USE_CASES } from '../lib/makerApplications';
+import type { ActiveTab, CyberScenario, SecurityThresholds, TelemetryPacket } from '../lib/types';
 import { ImuSensorGuide } from './ImuSensorGuide';
 import { MfaButtonsGuide } from './MfaButtonsGuide';
 import { OpticalSensorGuide } from './OpticalSensorGuide';
@@ -11,6 +12,8 @@ interface SensorsGuideViewProps {
   latestPacket: TelemetryPacket;
   thresholds: SecurityThresholds;
   telemetryActive: boolean;
+  onTestScenarioInSoc: (scenario: CyberScenario) => void;
+  onNavigateTab: (tab: ActiveTab) => void;
 }
 
 type SensorTabId = 'light' | 'imu' | 'thermal' | 'mfa';
@@ -19,11 +22,14 @@ export function SensorsGuideView({
   latestPacket,
   thresholds,
   telemetryActive,
+  onTestScenarioInSoc,
+  onNavigateTab,
 }: SensorsGuideViewProps) {
   const [selectedSensor, setSelectedSensor] = useState<SensorTabId>('light');
 
   const accelDelta = Math.abs(computeAccelMagnitude(latestPacket) - 1.0);
   const gyroMag = computeGyroMagnitude(latestPacket);
+  const makerCase = MAKERLAB_USE_CASES[selectedSensor];
 
   const tabs: Array<{
     id: SensorTabId;
@@ -96,6 +102,83 @@ export function SensorsGuideView({
           );
         })}
       </div>
+
+      {/* Real-World MakerLab Application Blueprint for the Selected Sensor */}
+      <section
+        className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
+        aria-label="Aplicación real en MakerLab de ciberseguridad e IA"
+      >
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <span className="font-semibold text-blue-600 dark:text-blue-400">
+                Aplicación Real MakerLab
+              </span>
+              <span aria-hidden="true">·</span>
+              <span className="font-mono">{makerCase.chipset}</span>
+            </div>
+            <h2 className="mt-1 font-display text-base font-semibold text-slate-900 dark:text-slate-100">
+              {makerCase.realWorldTitle}
+            </h2>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => onTestScenarioInSoc(makerCase.recommendedScenario)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-700 whitespace-nowrap shrink-0"
+            >
+              <Play className="h-3.5 w-3.5" aria-hidden="true" />
+              Probar escenario en SOC
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigateTab('ailab')}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 whitespace-nowrap shrink-0"
+            >
+              Entrenar en Laboratorio IA
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="border-t border-slate-200 pt-3 text-xs dark:border-slate-800">
+            <div className="font-semibold text-slate-900 dark:text-slate-100">
+              01. Dónde se aplica en industria
+            </div>
+            <p className="mt-1.5 leading-relaxed text-slate-600 dark:text-slate-300">
+              {makerCase.sectorContext}
+            </p>
+          </div>
+          <div className="border-t border-slate-200 pt-3 text-xs dark:border-slate-800">
+            <div className="flex items-center gap-1.5 font-semibold text-slate-900 dark:text-slate-100">
+              <Cpu className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+              02. Rol del microcontrolador (ESP32)
+            </div>
+            <p className="mt-1.5 leading-relaxed text-slate-600 dark:text-slate-300">
+              {makerCase.microcontrollerRole}
+            </p>
+          </div>
+          <div className="border-t border-slate-200 pt-3 text-xs dark:border-slate-800">
+            <div className="font-semibold text-slate-900 dark:text-slate-100">
+              03. Rol de la IA en el borde (k-NN)
+            </div>
+            <p className="mt-1.5 leading-relaxed text-slate-600 dark:text-slate-300">
+              {makerCase.edgeAiRole}
+            </p>
+          </div>
+          <div className="border-t border-slate-200 pt-3 text-xs dark:border-slate-800">
+            <div className="flex items-center gap-1.5 font-semibold text-slate-900 dark:text-slate-100">
+              <Wrench className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+              04. Prototipo para el MakerLab
+            </div>
+            <p className="mt-1.5 leading-relaxed text-slate-600 dark:text-slate-300">
+              {makerCase.makerLabProject}
+            </p>
+          </div>
+        </div>
+      </section>
 
       {selectedSensor === 'light' && (
         <OpticalSensorGuide

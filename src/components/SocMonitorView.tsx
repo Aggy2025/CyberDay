@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Download, RotateCcw, Send, ShieldAlert, Trash2 } from 'lucide-react';
+import { ArrowRight, Cpu, Download, RotateCcw, Send, ShieldAlert, Trash2 } from 'lucide-react';
 import {
   computeAccelMagnitude,
   computeGyroMagnitude,
@@ -8,7 +8,10 @@ import {
   SECURITY_CLASS_META,
 } from '../lib/cyberEngine';
 import { CYBER_MATRIX_PRESETS } from '../lib/firmwareTemplate';
+import { getMakerUseCaseForClass, getMakerUseCaseForScenario } from '../lib/makerApplications';
 import type {
+  ActiveTab,
+  CyberScenario,
   KnnPrediction,
   SecurityAlert,
   SecurityThresholds,
@@ -32,6 +35,8 @@ interface SocMonitorViewProps {
   prediction: KnnPrediction | null;
   threatHistory: ThreatTrendPoint[];
   bleConnected: boolean;
+  activeScenario: CyberScenario;
+  onNavigateTab: (tab: ActiveTab) => void;
 }
 
 export function SocMonitorView({
@@ -48,10 +53,17 @@ export function SocMonitorView({
   prediction,
   threatHistory,
   bleConnected,
+  activeScenario,
+  onNavigateTab,
 }: SocMonitorViewProps) {
   const accelMag = computeAccelMagnitude(latestPacket);
   const accelDelta = Math.abs(accelMag - 1.0);
   const gyroMag = computeGyroMagnitude(latestPacket);
+
+  const activeMakerCase =
+    prediction && prediction.isAnomaly
+      ? getMakerUseCaseForClass(prediction.predictedClass)
+      : getMakerUseCaseForScenario(activeScenario);
 
   const hasTamperAlert =
     accelDelta > thresholds.maxAccelDeltaG || gyroMag > thresholds.maxGyroDps;
@@ -575,6 +587,73 @@ export function SocMonitorView({
 
       {/* Recharts Temporal AI Threat Level Trend */}
       <ThreatTrendChart data={threatHistory} />
+
+      {/* Real-World MakerLab Application Context */}
+      <section
+        className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
+        aria-label="Aplicación real en MakerLab de lo observado en el Monitor SOC"
+      >
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <span className="font-semibold text-blue-600 dark:text-blue-400">
+                Enfoque MakerLab · Aplicación Real
+              </span>
+              <span aria-hidden="true">·</span>
+              <span>{activeMakerCase.sensorTitle}</span>
+            </div>
+            <h2 className="mt-1 font-display text-base font-semibold text-slate-900 dark:text-slate-100">
+              {activeMakerCase.realWorldTitle}
+            </h2>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => onNavigateTab('optical')}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 whitespace-nowrap shrink-0"
+            >
+              Ver circuito del sensor
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigateTab('ailab')}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-blue-700 whitespace-nowrap shrink-0"
+            >
+              <Cpu className="h-3.5 w-3.5" aria-hidden="true" />
+              Entrenar modelo k-NN
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="border-t border-slate-200 pt-3 text-xs dark:border-slate-800">
+            <div className="font-semibold text-slate-900 dark:text-slate-100">
+              ¿Qué protege en el mundo real?
+            </div>
+            <p className="mt-1 leading-relaxed text-slate-600 dark:text-slate-300">
+              {activeMakerCase.sectorContext}
+            </p>
+          </div>
+          <div className="border-t border-slate-200 pt-3 text-xs dark:border-slate-800">
+            <div className="font-semibold text-slate-900 dark:text-slate-100">
+              Acción autónoma del microcontrolador
+            </div>
+            <p className="mt-1 leading-relaxed text-slate-600 dark:text-slate-300">
+              {activeMakerCase.microcontrollerRole}
+            </p>
+          </div>
+          <div className="border-t border-slate-200 pt-3 text-xs dark:border-slate-800">
+            <div className="font-semibold text-slate-900 dark:text-slate-100">
+              Reto replicable en el MakerLab
+            </div>
+            <p className="mt-1 leading-relaxed text-slate-600 dark:text-slate-300">
+              {activeMakerCase.makerLabProject}
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

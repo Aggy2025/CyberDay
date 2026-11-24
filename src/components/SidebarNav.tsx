@@ -169,10 +169,10 @@ export function SidebarNav({
 
         <div className="border-t border-slate-200 p-4 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
           <p className="font-medium text-slate-700 dark:text-slate-300">
-            Día de AI &amp; Cybersecurity
+            MakerLab · AI &amp; Cybersecurity
           </p>
           <p className="mt-1 leading-relaxed">
-            Hardware: IdeaBoard ESP32 + IdeaSense Explorer (IMU, SHT30, LTR-303, Matriz 5×5).
+            Sensores físicos + microcontrolador ESP32 como primera línea de defensa e IA en el borde.
           </p>
         </div>
       </aside>

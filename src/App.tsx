@@ -305,6 +305,8 @@ export default function App() {
               prediction={prediction}
               threatHistory={threatHistory}
               bleConnected={connectionMode === 'ble'}
+              activeScenario={activeScenario}
+              onNavigateTab={setActiveTab}
             />
           )}
 
@@ -345,6 +347,12 @@ export default function App() {
               latestPacket={latestPacket}
               thresholds={thresholds}
               telemetryActive={connectionMode !== 'disconnected'}
+              onTestScenarioInSoc={(scenario) => {
+                setActiveScenario(scenario);
+                if (connectionMode === 'disconnected') setConnectionMode('demo');
+                setActiveTab('soc');
+              }}
+              onNavigateTab={setActiveTab}
             />
           )}
 

@@ -402,6 +402,44 @@ export function AiLabView({
         </div>
       </div>
 
+      {/* MakerLab Real-World TinyML & Microcontroller Context */}
+      <section className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+          <h2 className="font-display text-base font-semibold text-slate-900 dark:text-slate-100">
+            ¿Para qué entrenar IA (TinyML / k-NN) en un microcontrolador MakerLab?
+          </h2>
+          <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
+            ESP32 IdeaBoard · Inferencia local sin nube
+          </span>
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3 text-xs">
+          <div className="border-t border-slate-200 pt-3 dark:border-slate-800">
+            <div className="font-semibold text-slate-900 dark:text-slate-100">
+              01. Defensa en milisegundos sin internet
+            </div>
+            <p className="mt-1 leading-relaxed text-slate-600 dark:text-slate-300">
+              Un umbral fijo falla cuando cambia el entorno. Entrenando <span className="font-mono">k-NN</span> con muestras reales del laboratorio, el ESP32 distingue ruido normal (aire acondicionado o mesas vibrando) de un ataque físico real sin esperar respuesta de la nube.
+            </p>
+          </div>
+          <div className="border-t border-slate-200 pt-3 dark:border-slate-800">
+            <div className="font-semibold text-slate-900 dark:text-slate-100">
+              02. Privacidad y soberanía de telemetría
+            </div>
+            <p className="mt-1 leading-relaxed text-slate-600 dark:text-slate-300">
+              En infraestructura industrial (OT), salud o laboratorios universitarios, enviar datos crudos fuera de la red aumenta la superficie de ataque. Exportar <span className="font-mono">ideasense_cyber_knn.py</span> corre la clasificación 100% dentro del microcontrolador.
+            </p>
+          </div>
+          <div className="border-t border-slate-200 pt-3 dark:border-slate-800">
+            <div className="font-semibold text-slate-900 dark:text-slate-100">
+              03. De prototipo MakerLab a sensor SOC
+            </div>
+            <p className="mt-1 leading-relaxed text-slate-600 dark:text-slate-300">
+              Cada clase que capturas aquí —sabotaje mecánico, apertura óptica de gabinete o canal lateral térmico— equivale a un nodo de monitoreo físico que reporta alertas estructuradas a un SIEM o SOC real.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Exported CircuitPython Model Code */}
       {showPythonModal && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
